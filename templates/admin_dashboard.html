@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Autonomous Library Management System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard-wrapper">
+    <!-- Navbar -->
+    <header class="navbar">
+      <a href="{{ url_for('admin_dashboard') }}" class="navbar-brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Autonomous Library</span>
+      </a>
+      <div class="navbar-user">
+        <span class="badge badge-admin">Admin</span>
+        <span class="user-email-text">{{ user_email }}</span>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger-outline">Logout</a>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="dashboard-container">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Admin Management Console</h1>
+          <p class="page-subtitle">Real-time book inventory control and autonomous checkout clearance</p>
+        </div>
+        <button id="refresh-all-btn" class="btn btn-outline btn-sm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+          Refresh Data
+        </button>
+      </div>
+
+      <!-- Quick Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon primary">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-number" id="stat-total-titles">0</div>
+            <div class="stat-label">Total Titles</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon success">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-number" id="stat-available-copies">0</div>
+            <div class="stat-label">Available Copies</div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon warning">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <div>
+            <div class="stat-number" id="stat-active-issued">0</div>
+            <div class="stat-label">Active Issued Loans</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 1: Add New Book Form -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-title-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </span>
+            <h2 class="card-title">Add New Book to Inventory</h2>
+          </div>
+        </div>
+
+        <form id="add-book-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="book-title" class="form-label">Book Title *</label>
+              <input type="text" id="book-title" class="form-control" placeholder="e.g. Clean Code" required>
+            </div>
+
+            <div class="form-group">
+              <label for="book-author" class="form-label">Author *</label>
+              <input type="text" id="book-author" class="form-control" placeholder="e.g. Robert C. Martin" required>
+            </div>
+
+            <div class="form-group">
+              <label for="book-isbn" class="form-label">ISBN</label>
+              <input type="text" id="book-isbn" class="form-control" placeholder="e.g. 9780132350884">
+            </div>
+
+            <div class="form-group">
+              <label for="book-rfid" class="form-label">RFID Tag</label>
+              <input type="text" id="book-rfid" class="form-control" placeholder="e.g. RFID-8823-A">
+            </div>
+
+            <div class="form-group">
+              <label for="book-copies" class="form-label">Total Copies *</label>
+              <input type="number" id="book-copies" class="form-control" min="1" value="5" required>
+            </div>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 0.5rem;">
+            <button type="submit" id="add-book-btn" class="btn btn-primary">
+              <span class="btn-spinner"></span>
+              <span class="btn-text">Add Book</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- SECTION 2: Live Book Inventory Table -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-title-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </span>
+            <h2 class="card-title">Live Book Inventory</h2>
+          </div>
+          <div class="search-bar-wrapper">
+            <span class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+            </span>
+            <input type="text" id="inventory-search" class="form-control search-input" placeholder="Search inventory...">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table" id="inventory-table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>ISBN</th>
+                <th>RFID Tag</th>
+                <th style="text-align: center;">Total Copies</th>
+                <th style="text-align: center;">Available Copies</th>
+                <th style="text-align: center;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-table-body">
+              <tr>
+                <td colspan="7" class="table-empty-state">Loading book inventory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SECTION 3: Active Issued Books Table -->
+      <section class="card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-title-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="8.5" cy="7.5" r="4"></circle>
+                <line x1="20" y1="8" x2="20" y2="14"></line>
+                <line x1="23" y1="11" x2="17" y2="11"></line>
+              </svg>
+            </span>
+            <h2 class="card-title">Active Issued Books (Clearance Queue)</h2>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table" id="issued-table">
+            <thead>
+              <tr>
+                <th>Student Email</th>
+                <th>Book Title</th>
+                <th>Issue Date</th>
+                <th>Due Date</th>
+                <th style="text-align: center;">Fine (₹)</th>
+                <th style="text-align: center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="issued-table-body">
+              <tr>
+                <td colspan="6" class="table-empty-state">Loading issued records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>
