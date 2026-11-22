@@ -7,6 +7,16 @@ import firebase_admin.auth
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "autonomous-library-secret-key-2026")
 
+# ==========================================
+# ADMIN CONFIGURATION
+# Add authorized administrator emails here:
+# ==========================================
+ADMIN_EMAILS = [
+    "admin@library.com",
+    # "aryan@library.com",
+    # "librarian@library.com",
+]
+
 
 # ==========================================
 # AUTHENTICATION & PAGE ROUTING
@@ -42,10 +52,45 @@ def verify_login():
 
     # Role validation
     if selected_role == "admin":
-        if user_email.lower() != "admin@library.com":
+        user_email_clean = user_email.strip().lower()
+        is_admin = False
+
+        # 1. Check local config fallback
+        if user_email_clean in [e.strip().lower() for e in ADMIN_EMAILS]:
+            is_admin = True
+
+        # 2. Check Firestore 'admins' and 'admin' collections (checks doc ID and email fields)
+        if not is_admin:
+            try:
+                for col_name in ["admins", "admin"]:
+                    col_ref = db.collection(col_name)
+                    
+                    # Direct doc ID lookup
+                    doc = col_ref.document(user_email_clean).get()
+                    if doc.exists:
+                        is_admin = True
+                        break
+
+                    # Scan documents in collection for email field or loose ID match
+                    for d in col_ref.stream():
+                        d_id = d.id.strip().lower()
+                        d_data = d.to_dict() or {}
+                        d_email = str(d_data.get("email", "")).strip().lower()
+
+                        if d_id == user_email_clean or d_email == user_email_clean:
+                            is_admin = True
+                            break
+                    if is_admin:
+                        break
+            except Exception as check_err:
+                print(f"[AUTH ERROR] Failed checking Firestore admin status: {check_err}")
+
+        print(f"[AUTH] Admin login attempt for '{user_email_clean}' -> Result: {'APPROVED' if is_admin else 'DENIED'}")
+
+        if not is_admin:
             return jsonify({
                 "success": False,
-                "message": "Access denied: Only admin@library.com has administrator access."
+                "message": f"Access denied: '{user_email_clean}' is not registered in the administrator database."
             }), 403
         role = "admin"
         redirect_url = "/admin"

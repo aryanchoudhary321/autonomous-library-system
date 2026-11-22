@@ -55,8 +55,8 @@ function setRole(role) {
     tabStudent.setAttribute("aria-selected", "false");
     
     portalSubtitle.textContent = "Administrator Portal Login";
-    emailInput.placeholder = "admin@library.com";
-    roleHint.textContent = "Administrative privileges required (admin@library.com).";
+    emailInput.placeholder = "admin@example.com";
+    roleHint.textContent = "Authorized library administrator account required.";
   } else {
     tabStudent.classList.add("active");
     tabStudent.setAttribute("aria-selected", "true");
